@@ -18,6 +18,7 @@
 #include <fstream>
 #include <cassert>
 #include "blowfishStream.h"
+#include "gui/mainNPBFWindow.h"
 
 using namespace std;
 
@@ -55,31 +56,13 @@ void testbf()
 	delete bf;
 }
 
-int main()
+int main(int argc, char **argv)
 {
-	ifstream ifs;
-	ofstream ofs;
-	blowfishStream bf("this is a password");
-
-	ifs.open("vectors.txt");
-	ofs.open("enc.txt");
-
-	bf.setOutStream(ofs);
-
-	bf.encrypt(ifs);
-
-	ifs.close();
-	ofs.close();
-
-	ifs.open("enc.txt");
-	ofs.open("dec.txt");
-
-	bf.decrypt(ifs);
-
-	ifs.close();
-	ofs.close();
-
 	testbf();
+	QApplication app(argc, argv);
+	mainNPBFWindow window;
+	window.show();
+	app.exec();
 
 	return 0;
 }

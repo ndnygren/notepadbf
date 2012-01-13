@@ -28,6 +28,7 @@ void blowfishStream::setIV(unsigned int lhs, unsigned int rhs)
 void blowfishStream::setOutStream(std::ostream& input)
 {
 	outstream = &input;
+	outset = true;
 }
 
 void blowfishStream::encrypt(std::istream& input)
@@ -115,6 +116,7 @@ void blowfishStream::decrypt(std::istream& input)
 blowfishStream::blowfishStream(const std::string& password)
 {
 	bf = new blowfish(password.c_str(), password.length());
+	
 	outset = false;
 }
 
