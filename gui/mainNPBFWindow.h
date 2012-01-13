@@ -153,7 +153,7 @@ class mainNPBFWindow : public QWidget
 	mainNPBFWindow(QWidget *par = 0) : QWidget(par)
 	{
 		filename = "";
-		titlebar = "notepadbf v0._ ";
+		titlebar = "notepadbf v0.1 ";
 		setWindowTitle(titlebar);
 		textbox = new QTextEdit();
 		vbox = new QVBoxLayout();

@@ -22,6 +22,8 @@
 
 using namespace std;
 
+char copyright[] = "notepadbf v0.1 - simple text editor with Blowfish encryption Copyright (C) 2012 Nick Nygren";
+
 void testbf()
 {
 	blowfish *bf;
