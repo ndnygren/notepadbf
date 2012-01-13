@@ -1,3 +1,19 @@
+/* notepadbf - simple text editor with Blowfish encryption
+* Copyright (C) 2012 Nick Nygren
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program. If not, see <http://www.gnu.org/licenses/>. */
+
 #include <QtGui>
 #include <fstream>
 #include <sstream>
@@ -43,7 +59,7 @@ class mainNPBFWindow : public QWidget
 
 		ss.str(textbox->toPlainText().toStdString());
 
-		ofs.open(filename.toStdString().c_str());
+		ofs.open(filename.toStdString().c_str(), std::ofstream::out | std::ofstream::binary);
 
 		bf.setOutStream(ofs);
 		bf.encrypt(ss);
@@ -88,7 +104,7 @@ class mainNPBFWindow : public QWidget
 
 		ss.str(textbox->toPlainText().toStdString());
 
-		ofs.open(filename.toStdString().c_str());
+		ofs.open(filename.toStdString().c_str(), std::ofstream::out | std::ofstream::binary);
 
 		bf.setOutStream(ofs);
 		bf.encrypt(ss);
@@ -131,10 +147,22 @@ class mainNPBFWindow : public QWidget
 		password = dia.getPass1().toStdString();
 
 		blowfishStream bf(password);
-		std::ifstream ifs;
+		std::fstream ifs;
 		std::stringstream ss;
 
-		ifs.open(filename.toStdString().c_str());
+		ifs.open(filename.toStdString().c_str(), std::ios::in | std::ios::binary | std::ios::ate);
+		if (ifs.fail() || ifs.bad())
+		{
+			filename = "";
+			m1.setWindowTitle("Error");
+			m1.setText("Error: Could not open file.");
+			m1.exec();
+			return;
+		}
+		else
+		{
+			ifs.seekg(0, std::ios::beg);
+		}
 
 		bf.setOutStream(ss);
 		bf.decrypt(ifs);
@@ -144,8 +172,6 @@ class mainNPBFWindow : public QWidget
 		ifs.close();
 		
 		textbox->setText(ss.str().c_str());
-
-		
 	}
 
 	public:

@@ -14,6 +14,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
+#include "time.h"
 #include "blowfishStream.h"
 #include <cstdlib>
 
@@ -35,13 +36,14 @@ void blowfishStream::encrypt(std::istream& input)
 {
 	unsigned int buffer[2], enc[2];
 	unsigned int last[2];
-	int readsize, i;
+	std::streamsize readsize; 
+	long long int i;
 
 	if (!outset) { return; }
 
-	input.seekg (0, ios::end);
-	setIV(time(0),input.tellg());
-	input.seekg (0, ios::beg);
+	input.seekg(0, std::ios::end);
+	setIV(static_cast<unsigned int>(time(0)),static_cast<unsigned int>(input.tellg()));
+	input.seekg(0, std::ios::beg);
 
 	last[0] = iv[0]; last[1] = iv[1];
 
@@ -83,16 +85,20 @@ void blowfishStream::decrypt(std::istream& input)
 {
 	unsigned int buffer[2], dec[2];
 	unsigned int last[2];
-	int readsize, i;
+	streamoff readsize;
+	long long int i;
 	unsigned int writesize = 0;
 
 	if (!outset) { return; }
 
-	readsize = input.readsome((char*)last, 8);
+	last[0] = 0; last[1] = 0;
 
-	iv[0] = last[0]; iv[1] = last[1];
+	input.read((char*)last, 8);
 
-	while (8 == (readsize = input.readsome((char*)buffer, 8)))
+	setIV(last[0], last[1]);
+
+	input.read((char*)buffer, 8);
+	while (!input.fail() && !input.eof() && !input.bad())
 	{
 		bf->encblock(last, dec);
 		dec[0] = buffer[0] ^ dec[0];
@@ -107,7 +113,7 @@ void blowfishStream::decrypt(std::istream& input)
 				writesize++;
 			}
 		}
-
+		input.read((char*)buffer, 8);
 	}
 	
 
