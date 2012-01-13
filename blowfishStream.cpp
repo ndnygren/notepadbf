@@ -15,6 +15,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 #include "blowfishStream.h"
+#include <cstdlib>
 
 using namespace std;
 
@@ -35,8 +36,10 @@ void blowfishStream::encrypt(std::istream& input)
 	unsigned int last[2];
 	int readsize, i;
 
+	if (!outset) { return; }
+
 	input.seekg (0, ios::end);
-	setIV(0,input.tellg());
+	setIV(time(0),input.tellg());
 	input.seekg (0, ios::beg);
 
 	last[0] = iv[0]; last[1] = iv[1];
@@ -81,6 +84,8 @@ void blowfishStream::decrypt(std::istream& input)
 	unsigned int last[2];
 	int readsize, i;
 	unsigned int writesize = 0;
+
+	if (!outset) { return; }
 
 	readsize = input.readsome((char*)last, 8);
 
