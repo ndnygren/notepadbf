@@ -71,6 +71,7 @@ class blowfish
 	 * @brief stores the keystring's size
 	 */
 	int keylength;
+	unsigned int out64[2];
 
 	/**
 	 * @brief applies the f-box transformation to the input integer

@@ -15,8 +15,9 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 #include <iostream>
+#include <fstream>
 #include <cassert>
-#include "blowfish.h"
+#include "blowfishStream.h"
 
 using namespace std;
 
@@ -56,6 +57,27 @@ void testbf()
 
 int main()
 {
+	ifstream ifs;
+	ofstream ofs;
+	blowfishStream bf("this is a password");
+
+	ifs.open("vectors.txt");
+	ofs.open("enc.txt");
+
+	bf.setOutStream(ofs);
+
+	bf.encrypt(ifs);
+
+	ifs.close();
+	ofs.close();
+
+	ifs.open("enc.txt");
+	ofs.open("dec.txt");
+
+	bf.decrypt(ifs);
+
+	ifs.close();
+	ofs.close();
 
 	testbf();
 
