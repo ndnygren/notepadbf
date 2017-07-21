@@ -16,9 +16,9 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <cassert>
 #include "blowfishStream.h"
-#include "gui/mainNPBFWindow.h"
 
 using namespace std;
 
@@ -56,13 +56,41 @@ void testbf()
 	delete bf;
 }
 
+
 int main(int argc, char **argv)
 {
 	testbf();
-	QApplication app(argc, argv);
-	mainNPBFWindow window;
-	window.show();
-	app.exec();
+
+	if (argc < 4) { cerr << "Needs more arguments." << endl ; return -1; }
+
+	string action = argv[1];
+	string filename = argv[2];
+	string password = argv[3];
+
+	cerr << "action: " << action << endl;
+	cerr << "filename: " << filename << endl;
+	cerr << "password: " << password << endl;
+
+	blowfishStream bf(password);
+	fstream ifs;
+	std::stringstream ss;
+
+	ifs.open(filename.c_str(), ios::in | ios::binary | ios::ate);
+
+	if (ifs.fail() || ifs.bad())
+	{
+		cerr << "Error: Could not open file: " << filename << endl;
+		return -1;
+	}
+	else
+	{
+		ifs.seekg(0, ios::beg);
+	}
+
+	bf.setOutStream(ss);
+	bf.decrypt(ifs);
+
+	cout << ss.str() << endl;
 
 	return 0;
 }
