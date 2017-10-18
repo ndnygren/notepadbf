@@ -57,20 +57,31 @@ void testbf()
 }
 
 
-int main(int argc, char **argv)
-{
-	testbf();
+int encrypt(string filename, string password) {
+	blowfishStream bf(password);
+	fstream ifs;
+	std::stringstream ss;
 
-	if (argc < 4) { cerr << "Needs more arguments." << endl ; return -1; }
+	ifs.open(filename.c_str(), ios::in | ios::binary | ios::ate);
 
-	string action = argv[1];
-	string filename = argv[2];
-	string password = argv[3];
+	if (ifs.fail() || ifs.bad())
+	{
+		cerr << "Error: Could not open file: " << filename << endl;
+		return -1;
+	}
+	else
+	{
+		ifs.seekg(0, ios::beg);
+	}
 
-	cerr << "action: " << action << endl;
-	cerr << "filename: " << filename << endl;
-	cerr << "password: " << password << endl;
+	bf.setOutStream(ss);
+	bf.encrypt(ifs);
 
+	cout << ss.str() << endl;
+	return 0;
+}
+
+int decrypt(string filename, string password) {
 	blowfishStream bf(password);
 	fstream ifs;
 	std::stringstream ss;
@@ -91,6 +102,30 @@ int main(int argc, char **argv)
 	bf.decrypt(ifs);
 
 	cout << ss.str() << endl;
+	return 0;
+}
+
+int main(int argc, char **argv)
+{
+	testbf();
+
+	if (argc < 4) { cerr << "Needs more arguments." << endl ; return -1; }
+
+	string action = argv[1];
+	string filename = argv[2];
+	string password = argv[3];
+
+	cerr << "action: " << action << endl;
+	cerr << "filename: " << filename << endl;
+	cerr << "password: " << password << endl;
+
+	if (action == "enc") {
+		return encrypt(filename, password);
+	} else if (action == "dec") {
+		return decrypt(filename, password);
+	} else {
+		cerr << "error: action must be either \"enc\" or \"dec\"." << endl;
+	}
 
 	return 0;
 }
