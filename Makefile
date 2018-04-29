@@ -1,4 +1,6 @@
 
+hs=$(shell ls *.h)
+
 all: a.out
 
 blowfish.o: blowfish.cpp
@@ -7,5 +9,5 @@ blowfish.o: blowfish.cpp
 blowfishStream.o: blowfishStream.cpp
 	g++ -c blowfishStream.cpp
 
-a.out: blowfish.o blowfishStream.o main.cpp
+a.out: blowfish.o blowfishStream.o main.cpp $(hs)
 	g++ -lncurses blowfish.o blowfishStream.o main.cpp
