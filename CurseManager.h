@@ -41,11 +41,7 @@ class CurseManager  {
 					case 127:
 					case 330:
 						if (winf == PASS) { backSpace(key, px); px > 0 ? px-- : px; }
-						if (winf == BODY) {
-							backSpace(rows[cy], cx);
-							cx > 0 ? cx-- : cx;
-							redrawLine(cy);
-						}
+						if (winf == BODY) { backSpace(rows[cy], cx); cx > 0 ? cx-- : cx; redrawLine(cy); }
 						break;
 					case KEY_UP:
 						if (winf == BODY && cy > 0) { cy--; }
@@ -73,6 +69,10 @@ class CurseManager  {
 						}
 						break;
 					default:
+						//if ( (ch >= 'a' && <= 'z') || (ch >= 'A' && <= 'Z') || (ch >= '0' && <= '9') ) {}
+						if (winf == PASS) { keySpace(ch, key, px); px++; }
+						if (winf == BODY) { keySpace(ch, rows[cy], cx); cx++; redrawLine(cy); }
+
 						mvwprintw(pwin, 1,1, (to_string(ch) + "____").c_str());
 						drawPMenu();
 				}
@@ -142,6 +142,11 @@ class CurseManager  {
 	static void backSpace(string& input, int idx) {
 		if (idx < 1 || idx > input.length()) { return; }
 		input = input.substr(0, idx-1) + (idx < input.length() ? input.substr(idx) : "");
+	}
+
+	static void keySpace(char ch, string& input, int idx) {
+		if (idx < 0 || idx > input.length()) { return; }
+		input = input.substr(0, idx) + ch + (idx < input.length() ? input.substr(idx) : "");
 	}
 
 	CurseManager (string fname) {
