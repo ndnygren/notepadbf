@@ -45,12 +45,10 @@ class CurseManager  {
 						if (winf == BODY) { backSpace(rows[cy], cx); cx > 0 ? cx-- : cx; redrawLine(cy); }
 						break;
 					case KEY_UP:
-						if (winf == BODY && cy > 0) { cy--; }
-						if (cx > rows[cy].size()) { cx =  rows[cy].size(); }
+						if (winf == BODY && cy > 0) { cy--; rowChange(); }
 						break;
 					case KEY_DOWN:
-						if (winf == BODY && cy+1 < rows.size()) { cy++; }
-						if (cx > rows[cy].size()) { cx =  rows[cy].size(); }
+						if (winf == BODY && cy+1 < rows.size()) { cy++;  rowChange(); }
 						break;
 					case KEY_LEFT:
 						if (winf == PASS && px > 0) { px--; }
@@ -69,16 +67,40 @@ class CurseManager  {
 							case MENU: winf = PASS; break;
 						}
 						break;
+					case KEY_ENTER: case 10:
+						if (winf == BODY) { newLine(); }
+						break;
 					default:
 						//if ( (ch >= 'a' && <= 'z') || (ch >= 'A' && <= 'Z') || (ch >= '0' && <= '9') ) {}
 						if (winf == PASS) { keySpace(ch, key, px); px++; keyChange(); }
 						if (winf == BODY) { keySpace(ch, rows[cy], cx); cx++; redrawLine(cy); }
 
-						mvwprintw(pwin, 1,1, (to_string(ch) + "____").c_str());
-						drawPMenu();
+						mvwprintw(xwin, 1,1, (to_string(ch) + "____").c_str());
+						drawXMenu();
 				}
 			}
 		}
+	}
+
+	void newLine() {
+		string old = rows[cy];
+		rows.insert( rows.begin() + cy , old.substr(0,cx));
+		rows[cy+1] = old.substr(cx);
+		cy++;
+		rowChange();
+	}
+
+	void rowChange() {
+		if (cx > rows[cy].size()) { cx =  rows[cy].size(); }
+		if (cy < top_line) {
+			top_line = cy;
+		} else if (cy - top_line >= h - 2*head_height - 2) {
+			top_line++;
+		}
+		redrawAllLines();
+		mvwprintw(xwin, 1,1, (to_string(top_line) + " line").c_str());
+		drawXMenu();
+		drawNMenu();
 	}
 
 	void keyChange() {
@@ -113,7 +135,7 @@ class CurseManager  {
 	}
 
 	void drawBMenu() {
-		wmove(win, cy+1,cx+1);
+		wmove(win, cy - top_line + 1, cx + 1);
 		box(win, 0, 0);
 		wrefresh(win);
 	}
@@ -137,6 +159,7 @@ class CurseManager  {
 			ch = idx < rows[line].length() ? rows[line][idx] : ' ';
 			waddch(win, ch);
 		}
+
 		for (int idx = 0; idx < padded.length(); idx++) {
 			ch = padded[idx];
 			waddch(numwin, ch);
@@ -190,9 +213,9 @@ class CurseManager  {
 	CurseManager (string fcont) {
 		cx = 0;
 		cy = 0;
-		px = 0;
 		xx = 0;
 		key = "password";
+		px = key.length();
 		chtype ch = 'x';
 		top_line = 0;
 		winf = BODY;
