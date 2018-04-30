@@ -60,10 +60,9 @@ void testbf()
 
 int encrypt(string filename, string password) {
 	blowfishStream bf(password);
-	fstream ifs;
-	std::stringstream ss;
-
-	ifs.open(filename.c_str(), ios::in | ios::binary | ios::ate);
+	std::ifstream ifs(filename);
+	string body((istreambuf_iterator<char>(ifs)), (istreambuf_iterator<char>()));
+	std::stringstream ssin(body), ss;
 
 	if (ifs.fail() || ifs.bad())
 	{
@@ -76,7 +75,7 @@ int encrypt(string filename, string password) {
 	}
 
 	bf.setOutStream(ss);
-	bf.encrypt(ifs);
+	bf.encrypt(ssin);
 
 	cout << ss.str() << endl;
 	return 0;
@@ -131,7 +130,9 @@ int main(int argc, char **argv)
 		password = argv[3];
 		return decrypt(filename, password);
 	} else if (action == "curses") {
-		CurseManager cm(filename);
+		std::ifstream ifs(filename);
+		string body((istreambuf_iterator<char>(ifs)), (istreambuf_iterator<char>()));
+		CurseManager cm(body);
 	} else {
 		cerr << "error: action must be either \"enc\" or \"dec\"." << endl;
 	}
