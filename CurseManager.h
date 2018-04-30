@@ -14,20 +14,22 @@ class CurseManager  {
 	private:
 		static const int head_height = 3;
 		static const int left_margin = 5;
+		static const int stat_split = 12;
 		enum WinF { PASS, BODY, MENU } winf;
 		int h,w;
 		vector<string> rows;
 		int top_line;
 		int cx,cy,px,xx;
 		string key;
+		bool save, done;
 
 		string filecont;
-		WINDOW *win, *pwin, *numwin, *xwin;
+		WINDOW *win, *pwin, *numwin, *xwin, *statwin;
 
 	void run () {
 		int ch;
 		nodelay(stdscr, FALSE);
-		while (true) {
+		while (!done) {
 
 			switch (winf) {
 				case PASS: drawPMenu(); break;
@@ -57,7 +59,7 @@ class CurseManager  {
 						break;
 					case KEY_RIGHT:
 						if (winf == PASS && px < key.size()) { px++; }
-						if (winf == MENU && xx < 2) { xx++; }
+						if (winf == MENU && xx < 1) { xx++; }
 						if (winf == BODY && cx < rows[cy].size()) { cx++; }
 						break;
 					case '\t':
@@ -69,17 +71,27 @@ class CurseManager  {
 						break;
 					case KEY_ENTER: case 10:
 						if (winf == BODY) { newLine(); }
+						if (winf == MENU) { exit(); }
 						break;
 					default:
 						//if ( (ch >= 'a' && <= 'z') || (ch >= 'A' && <= 'Z') || (ch >= '0' && <= '9') ) {}
 						if (winf == PASS) { keySpace(ch, key, px); px++; keyChange(); }
 						if (winf == BODY) { keySpace(ch, rows[cy], cx); cx++; redrawLine(cy); }
 
-						mvwprintw(xwin, 1,1, (to_string(ch) + "____").c_str());
-						drawXMenu();
+						mvwprintw(statwin, 1,1, (to_string(ch) + "____").c_str());
+						drawSMenu();
 				}
 			}
 		}
+	}
+
+
+	void exit() {
+		save = (xx == 0);
+		done = true;
+		mvwprintw(statwin, 1,1, "closing");
+		drawSMenu();
+		endwin();
 	}
 
 	void newLine() {
@@ -98,8 +110,8 @@ class CurseManager  {
 			top_line++;
 		}
 		redrawAllLines();
-		mvwprintw(xwin, 1,1, (to_string(top_line) + " line").c_str());
-		drawXMenu();
+		mvwprintw(statwin, 1,1, (to_string(top_line) + " line").c_str());
+		drawSMenu();
 		drawNMenu();
 	}
 
@@ -125,9 +137,14 @@ class CurseManager  {
 	}
 
 	void drawXMenu() {
-		wmove(xwin, 1,1 + 5*xx);
+		wmove(xwin, 1,1 + 7*xx);
 		box(xwin, 0, 0);
 		wrefresh(xwin);
+	}
+
+	void drawSMenu() {
+		box(statwin, 0, 0);
+		wrefresh(statwin);
 	}
 
 	void drawNMenu() {
@@ -172,7 +189,7 @@ class CurseManager  {
 		}
 	}
 
-	vector<string> decrypt(const string& input, const string& password) {
+	vector<string> decrypt(const string& input, const string& password) const {
 		blowfishStream bf(key);
 		std::stringstream ssin(input), ssout;
 
@@ -183,7 +200,29 @@ class CurseManager  {
 		return explode(ssout.str(), "\n");
 	}
 
+	string encrypt(const string& input, const string& password) const {
+		blowfishStream bf(key);
+		std::stringstream ssin(input), ssout;
+
+
+		bf.setOutStream(ssout);
+		bf.encrypt(ssin);
+
+		return ssout.str();
+	}
+
 	public :
+
+	bool isSave() const { return save; }
+
+	string content() const {
+		string output = rows[0];
+		for (int i = 1; i < rows.size(); i++) {
+			output += '\n' + rows[i];
+		}
+
+		return encrypt(output, key);
+	}
 
 	static vector<string> explode(const string& input, const string& delim) {
 		vector<string> output;
@@ -218,6 +257,8 @@ class CurseManager  {
 		px = key.length();
 		chtype ch = 'x';
 		top_line = 0;
+		save = false;
+		done = false;
 		winf = BODY;
 		initscr();
 		cbreak();
@@ -228,7 +269,8 @@ class CurseManager  {
 		win = newwin(h - 2*head_height, w - left_margin, head_height, left_margin);
 		numwin = newwin(h - 2*head_height, left_margin, head_height, 0);
 		pwin = newwin(head_height, w, 0, 0);
-		xwin = newwin(head_height, w, h-head_height, 0);
+		xwin = newwin(head_height, w-stat_split, h-head_height, 0);
+		statwin = newwin(head_height, stat_split, h-head_height, w-stat_split);
 		rows.push_back("");
 
 		waddch(win,ch);
@@ -237,16 +279,17 @@ class CurseManager  {
 		redrawAllLines();
 
 		getch();
+		mvwprintw(xwin, 1,1, "SAVE   CANCEL");
 		drawBMenu();
 		drawPMenu();
 		drawNMenu();
 		drawXMenu();
+		drawSMenu();
 		run();
 	}
 
 	~CurseManager() {
-		endwin();
-		cerr << "closing" << endl;
+		cerr << "closing " << isSave() << endl;
 	}
 };
 

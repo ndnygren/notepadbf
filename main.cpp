@@ -139,7 +139,13 @@ int main(int argc, char **argv)
 	} else if (action == "curses") {
 		std::ifstream ifs(filename);
 		string body((istreambuf_iterator<char>(ifs)), (istreambuf_iterator<char>()));
+		ifs.close();
 		CurseManager cm(body);
+		if (cm.isSave()) {
+			std::ofstream ofs(filename);
+			ofs << cm.content();
+			ofs.close();
+		}
 	} else {
 		cerr << "error: action must be either \"enc\" or \"dec\"." << endl;
 	}
