@@ -54,6 +54,13 @@ void testbf()
 	assert(out[0] == 0x51866FD5);
 	assert(out[1] == 0xB85ECB8A);
 
+
+	vector<string> test = CurseManager::explode("dsfgsdfgb", "s");
+	vector<string> test2 = CurseManager::explode("dsfgsdfgbs", "s");
+
+	assert(test.size() == 3 && test[0] == "d"  && test[1] == "fg" && test[2] == "dfgb");
+	assert(test2.size() == 4 && test2[0] == "d"  && test2[1] == "fg" && test2[2] == "dfgb");
+
 	delete bf;
 }
 

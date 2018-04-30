@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <curses.h>
+#include "blowfishStream.h"
 
 using namespace std;
 
@@ -20,7 +21,7 @@ class CurseManager  {
 		int cx,cy,px,xx;
 		string key;
 
-		string filename;
+		string filecont;
 		WINDOW *win, *pwin, *numwin, *xwin;
 
 	void run () {
@@ -40,7 +41,7 @@ class CurseManager  {
 					case KEY_BACKSPACE:
 					case 127:
 					case 330:
-						if (winf == PASS) { backSpace(key, px); px > 0 ? px-- : px; }
+						if (winf == PASS) { backSpace(key, px); px > 0 ? px-- : px; keyChange(); }
 						if (winf == BODY) { backSpace(rows[cy], cx); cx > 0 ? cx-- : cx; redrawLine(cy); }
 						break;
 					case KEY_UP:
@@ -70,13 +71,24 @@ class CurseManager  {
 						break;
 					default:
 						//if ( (ch >= 'a' && <= 'z') || (ch >= 'A' && <= 'Z') || (ch >= '0' && <= '9') ) {}
-						if (winf == PASS) { keySpace(ch, key, px); px++; }
+						if (winf == PASS) { keySpace(ch, key, px); px++; keyChange(); }
 						if (winf == BODY) { keySpace(ch, rows[cy], cx); cx++; redrawLine(cy); }
 
 						mvwprintw(pwin, 1,1, (to_string(ch) + "____").c_str());
 						drawPMenu();
 				}
 			}
+		}
+	}
+
+	void keyChange() {
+		if (key.length() > 2) {
+			rows = decrypt(filecont, key);
+			if (top_line >= rows.size()) { top_line = 0; }
+			if (cy >= rows.size()) { cy = 0; }
+			redrawAllLines();
+			drawBMenu();
+			drawNMenu();
 		}
 	}
 
@@ -137,7 +149,33 @@ class CurseManager  {
 		}
 	}
 
+	vector<string> decrypt(const string& input, const string& password) {
+		blowfishStream bf(key);
+		std::stringstream ssin(input), ssout;
+
+
+		bf.setOutStream(ssout);
+		bf.decrypt(ssin);
+
+		return explode(ssout.str(), "\n");
+	}
+
 	public :
+
+	static vector<string> explode(const string& input, const string& delim) {
+		vector<string> output;
+		size_t last = 0;
+		size_t idx = input.find(delim, last);
+
+		while (idx != string::npos) {
+			output.push_back(input.substr(last, idx-last));
+			last = idx+1;
+			idx = input.find(delim, last);
+		}
+		output.push_back(input.substr(last));
+
+		return output;
+	}
 
 	static void backSpace(string& input, int idx) {
 		if (idx < 1 || idx > input.length()) { return; }
@@ -149,7 +187,7 @@ class CurseManager  {
 		input = input.substr(0, idx) + ch + (idx < input.length() ? input.substr(idx) : "");
 	}
 
-	CurseManager (string fname) {
+	CurseManager (string fcont) {
 		cx = 0;
 		cy = 0;
 		px = 0;
@@ -162,23 +200,13 @@ class CurseManager  {
 		cbreak();
 		noecho();
 		keypad(stdscr, TRUE);
-		filename = fname;
+		filecont = fcont;
 		getmaxyx(stdscr, h, w);
 		win = newwin(h - 2*head_height, w - left_margin, head_height, left_margin);
 		numwin = newwin(h - 2*head_height, left_margin, head_height, 0);
 		pwin = newwin(head_height, w, 0, 0);
 		xwin = newwin(head_height, w, h-head_height, 0);
-		rows.push_back("row one");
-		rows.push_back("row two");
-		rows.push_back("row three");
-		rows.push_back("row four");
-		rows.push_back("row five");
-		rows.push_back("row six");
-		rows.push_back("row seven");
-		rows.push_back("row eight");
-		rows.push_back("row nine");
-		rows.push_back("row ten");
-		rows.push_back("row eleven");
+		rows.push_back("");
 
 		waddch(win,ch);
 
