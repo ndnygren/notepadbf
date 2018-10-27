@@ -157,6 +157,17 @@ class CurseManager  {
 		wrefresh(win);
 	}
 
+	void blankLine(int line) {
+		int y = (line - top_line);
+		int x = 0;
+		wmove(win, y+1, x+1);
+		wmove(numwin, y+1, x);
+		for (int idx = 0; idx < w - left_margin -2; idx++) {
+			chtype ch = ' ';
+			waddch(win, ch);
+		}
+	}
+
 	void redrawLine(int line) {
 		chtype ch;
 
@@ -173,7 +184,11 @@ class CurseManager  {
 		wmove(win, y+1, x+1);
 		wmove(numwin, y+1, x);
 		for (int idx = 0; idx < w - left_margin -2; idx++) {
-			ch = idx < rows[line].length() ? rows[line][idx] : ' ';
+			if (containsIllegal(rows[line])) {
+				ch = ' ';
+			} else {
+				ch = idx < rows[line].length() ? rows[line][idx] : ' ';
+			}
 			waddch(win, ch);
 		}
 
@@ -183,9 +198,21 @@ class CurseManager  {
 		}
 	}
 
+	bool containsIllegal(const string& input) const {
+		for (int i = 0; i < input.length(); i++) {
+			if (input[i] > 127 || input[i] < 1) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	void redrawAllLines() {
 		for (int i = 0; i < rows.size(); i++) {
 			redrawLine(i);
+		}
+		for (int i = rows.size(); i - top_line < h - 2*head_height - 2; i++) {
+			blankLine(i);
 		}
 	}
 
